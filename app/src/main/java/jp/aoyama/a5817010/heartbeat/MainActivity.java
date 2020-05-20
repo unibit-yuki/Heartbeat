@@ -13,11 +13,14 @@ import android.widget.TextView;
 import android.widget.ToggleButton;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -31,9 +34,7 @@ public class MainActivity extends WearableActivity implements SensorEventListene
     private SensorManager mSensorManager;
     public float hb=0.0f;
     private ArrayList<String> tmp_data = new ArrayList<String>();
-    //private ArrayList<ArrayList<Float>> tmp_data = new ArrayList<ArrayList<Float>>();
     private boolean flag = false;
-    //private String current_date;
 
     @Override
     protected void onStart(){
@@ -105,7 +106,12 @@ public class MainActivity extends WearableActivity implements SensorEventListene
     public void exportCsv(ArrayList data){
         try{
             statusView.setText("Saving...");
-            FileWriter f = new FileWriter("/data/data/jp.aoyama.a5817010.heartbeat/heartbeat_log.csv", false);
+
+            LocalDateTime end_time = LocalDateTime.now();
+            DateTimeFormatter dtformat = DateTimeFormatter.ofPattern("MMddHHmmss");
+            String fname = dtformat.format(end_time);
+
+            FileWriter f = new FileWriter("/data/data/jp.aoyama.a5817010.heartbeat/" + fname + ".csv", false);
             PrintWriter p = new PrintWriter(new BufferedWriter(f));
 
             //ヘッダーを指定する
