@@ -33,6 +33,8 @@ public class MainActivity extends WearableActivity implements SensorEventListene
     private TextView statusView;
     private SensorManager mSensorManager;
     public float hb=0.0f;
+    public long startTime = 0;
+    public long tmpTime = 0;
     private ArrayList<String> tmp_data = new ArrayList<String>();
     private boolean flag = false;
 
@@ -51,6 +53,9 @@ public class MainActivity extends WearableActivity implements SensorEventListene
         heartTextView = (TextView) findViewById(R.id.text_heart);
         statusView = (TextView) findViewById(R.id.status_view);
 
+        //計測開始時刻の保存
+        startTime = System.currentTimeMillis();
+
         //ボタン設定
         ToggleButton status_btn = (ToggleButton) findViewById(R.id.status_btn);
 
@@ -60,6 +65,7 @@ public class MainActivity extends WearableActivity implements SensorEventListene
                     public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
                         if(isChecked){
                             flag = true;
+                            tmp_data.clear();
                             statusView.setText("Recording...");
                         }else{
                             flag = false;
@@ -88,11 +94,16 @@ public class MainActivity extends WearableActivity implements SensorEventListene
     @Override
     public void onSensorChanged(SensorEvent event){
         if (event.sensor.getType() == Sensor.TYPE_HEART_RATE) {
-            hb = event.values[0];
-            heartTextView.setText(String.valueOf(hb));
 
-            if(flag){
-                tmp_data.add(getToday() + "," + (int)hb);
+            //極小期間(100ms以下)で心拍データが2つ取得されるのを防ぐ
+            if(System.currentTimeMillis() - tmpTime > 100) {
+                hb = event.values[0];
+                tmpTime = System.currentTimeMillis();
+                heartTextView.setText(String.valueOf(hb));
+
+                if(flag){
+                    tmp_data.add((int)hb + "," + tmpTime);
+                }
             }
         }
     }
@@ -102,7 +113,7 @@ public class MainActivity extends WearableActivity implements SensorEventListene
 
     }
 
-
+    //[心拍数,計測経過時間]をcsvファイルに書き込む関数
     public void exportCsv(ArrayList data){
         try{
             statusView.setText("Saving...");
@@ -115,9 +126,9 @@ public class MainActivity extends WearableActivity implements SensorEventListene
             PrintWriter p = new PrintWriter(new BufferedWriter(f));
 
             //ヘッダーを指定する
-            p.print("Time");
+            p.print("Heartbeat");
             p.print(",");
-            p.print("heartbeat");
+            p.print("Time");
             p.println();
 
             //内容をセットする
@@ -128,6 +139,7 @@ public class MainActivity extends WearableActivity implements SensorEventListene
 
             p.close();
 
+            tmp_data.clear();
             statusView.setText("Save Complete!");
 
         } catch (IOException e){
@@ -136,8 +148,11 @@ public class MainActivity extends WearableActivity implements SensorEventListene
         }
     }
 
+    /*
+    //現在の時刻を取得する関数
     public String getToday() {
         LocalTime current_time = LocalTime.now();
         return current_time.toString();
     }
+    */
 }
