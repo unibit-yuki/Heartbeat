@@ -1,3 +1,4 @@
+//心拍数をcsvで保存するウェアラブルアプリケーション
 package jp.aoyama.a5817010.heartbeat;
 
 import android.hardware.Sensor;
