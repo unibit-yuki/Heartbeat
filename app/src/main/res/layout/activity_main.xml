@@ -24,7 +24,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:text="Heartbeat"
+                android:text="@string/text_heartbeat"
                 android:textSize="30sp" />
 
             <TextView
@@ -32,16 +32,15 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:text="STANDBY..."
+                android:text="@string/status_view"
                 android:textSize="18sp" />
 
             <ToggleButton
                 android:id="@+id/status_btn"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Heartbeat"
-                android:textOff="start"
-                android:textOn="stop" />
+                android:textOff="@string/btn_off"
+                android:textOn="@string/btn_on" />
 
         </LinearLayout>
 

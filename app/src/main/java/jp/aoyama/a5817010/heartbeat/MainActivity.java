@@ -35,8 +35,9 @@ public class MainActivity extends WearableActivity implements SensorEventListene
     public float hb=0.0f;
     public long startTime = 0;
     public long tmpTime = 0;
-    private ArrayList<String> tmp_data = new ArrayList<String>();
+    private String tmp_data = "None";
     private boolean flag = false;
+    private String fname;
 
     @Override
     protected void onStart(){
@@ -53,26 +54,33 @@ public class MainActivity extends WearableActivity implements SensorEventListene
         heartTextView = (TextView) findViewById(R.id.text_heart);
         statusView = (TextView) findViewById(R.id.status_view);
 
-        //計測開始時刻の保存
-        startTime = System.currentTimeMillis();
+
 
         //ボタン設定
         ToggleButton status_btn = (ToggleButton) findViewById(R.id.status_btn);
 
         status_btn.setOnCheckedChangeListener(
-                new CompoundButton.OnCheckedChangeListener() {
-                    @Override
-                    public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
-                        if(isChecked){
-                            flag = true;
-                            tmp_data.clear();
-                            statusView.setText("Recording...");
-                        }else{
-                            flag = false;
-                            exportCsv(tmp_data);
-                        }
+            new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
+                    if(isChecked){
+                        flag = true;
+                        tmp_data = "None";
+                        statusView.setText("Recording...");
+
+                        //保存ファイル名設定
+                        LocalDateTime start_time = LocalDateTime.now();
+                        DateTimeFormatter dtformat = DateTimeFormatter.ofPattern("MMddHHmmss");
+                        fname = dtformat.format(start_time);
+
+                        //計測開始時刻の保存
+                        startTime = System.currentTimeMillis();
+                    }else{
+                        flag = false;
+                        statusView.setText("STANDBY...");
                     }
                 }
+            }
         );
 
 
@@ -95,14 +103,14 @@ public class MainActivity extends WearableActivity implements SensorEventListene
     public void onSensorChanged(SensorEvent event){
         if (event.sensor.getType() == Sensor.TYPE_HEART_RATE) {
 
-            //極小期間(100ms以下)で心拍データが2つ取得されるのを防ぐ
-            if(System.currentTimeMillis() - tmpTime > 100) {
+            if(System.currentTimeMillis() - tmpTime > 100) { //極小期間(100ms以下)で心拍データが2つ取得されるのを防ぐ
                 hb = event.values[0];
                 tmpTime = System.currentTimeMillis();
                 heartTextView.setText(String.valueOf(hb));
 
                 if(flag){
-                    tmp_data.add((int)hb + "," + tmpTime);
+                    tmp_data = ((int)hb + "," + (tmpTime - startTime));
+                    exportCsv(tmp_data);
                 }
             }
         }
@@ -114,45 +122,16 @@ public class MainActivity extends WearableActivity implements SensorEventListene
     }
 
     //[心拍数,計測経過時間]をcsvファイルに書き込む関数
-    public void exportCsv(ArrayList data){
+    public void exportCsv(String data){
         try{
-            statusView.setText("Saving...");
-
-            LocalDateTime end_time = LocalDateTime.now();
-            DateTimeFormatter dtformat = DateTimeFormatter.ofPattern("MMddHHmmss");
-            String fname = dtformat.format(end_time);
-
-            FileWriter f = new FileWriter("/data/data/jp.aoyama.a5817010.heartbeat/" + fname + ".csv", false);
+            FileWriter f = new FileWriter("/data/data/jp.aoyama.a5817010.heartbeat/" + fname + ".csv", true);
             PrintWriter p = new PrintWriter(new BufferedWriter(f));
 
-            //ヘッダーを指定する
-            p.print("Heartbeat");
-            p.print(",");
-            p.print("Time");
-            p.println();
-
-            //内容をセットする
-            for(int i = 0; i < data.size(); i++){
-                p.print(data.get(i));
-                p.println();
-            }
-
+            p.println(data);
             p.close();
-
-            tmp_data.clear();
-            statusView.setText("Save Complete!");
-
         } catch (IOException e){
             statusView.setText("Faild to save");
             e.printStackTrace();
         }
     }
-
-    /*
-    //現在の時刻を取得する関数
-    public String getToday() {
-        LocalTime current_time = LocalTime.now();
-        return current_time.toString();
-    }
-    */
 }
